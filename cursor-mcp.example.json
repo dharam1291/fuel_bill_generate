@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "fuel-bill-generate": {
+      "command": "node",
+      "args": [
+        "/ABSOLUTE/PATH/TO/fuel_bill_generate/mcp-server/index.js"
+      ],
+      "env": {}
+    }
+  }
+}

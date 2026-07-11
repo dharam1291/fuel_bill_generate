@@ -1,0 +1,54 @@
+{
+  "month": "April",
+  "year": 2026,
+  "vehicleNumber": "UP32JK1292",
+  "fuelType": "Petrol",
+  "customerName": "Dharmendra Singh",
+  "paymentType": "Online",
+  "enableTxnNo": true,
+  "outputFolder": "./generated_bills",
+  "template": "2",
+  "stations": {
+    "HP": {
+      "name": "HP Petrol Pump",
+      "address": "SS Near Mamoora Chowk, Phase 2, C Block, Noida, Uttar Pradesh 201301"
+    },
+    "Indian Oil": {
+      "name": "Indian Oil Petrol Pump",
+      "address": "301, Shakti Khand, Abhay Khand 3, Sector 10, Shakti Khand I, Indirapuram, Ghaziabad, Uttar Pradesh 201014"
+    },
+    "Bharat Petroleum": {
+      "name": "BP Petrol Pump",
+      "address": "Kala Pathar Rd, Aditya Mega City, Vaibhav Khand, Indirapuram, Ghaziabad, Uttar Pradesh 201014"
+    }
+  },
+  "dates": [
+    {
+      "date": 3,
+      "company": "HP",
+      "amount": 2412.5,
+      "rate": 96.5,
+      "time": "09:18",
+      "txnNo": "TXN2026040301",
+      "paymentType": "Online"
+    },
+    {
+      "date": 14,
+      "company": "Indian Oil",
+      "amount": 2913,
+      "rate": 97.1,
+      "time": "14:42",
+      "txnNo": "TXN2026041401",
+      "paymentType": "Debit Card"
+    },
+    {
+      "date": 21,
+      "company": "Bharat Petroleum",
+      "amount": 1936,
+      "rate": 96.8,
+      "time": "18:05",
+      "txnNo": "TXN2026042101",
+      "paymentType": "Cash"
+    }
+  ]
+}

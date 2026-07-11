@@ -1,0 +1,30 @@
+{
+  "name": "fuel-bill-generate",
+  "version": "1.0.0",
+  "description": "Generate fuel bill PDFs via Playwright with an MCP server for Cursor",
+  "main": "src/generator.js",
+  "bin": {
+    "fuel-bill-generate": "scripts/generate.js",
+    "fuel-bill-mcp": "mcp-server/index.js"
+  },
+  "scripts": {
+    "generate": "node scripts/generate.js",
+    "generate:config": "node scripts/generate.js config.example.json",
+    "postinstall": "npx playwright install chromium || true",
+    "mcp": "node mcp-server/index.js"
+  },
+  "keywords": [
+    "fuel-bill",
+    "mcp",
+    "playwright",
+    "pdf"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "playwright": "^1.52.0"
+  }
+}

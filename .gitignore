@@ -1,0 +1,6 @@
+node_modules/
+generated_bills/
+.DS_Store
+*.log
+.env
+config.local.json
