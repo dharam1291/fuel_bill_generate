@@ -27,7 +27,7 @@ const server = new Server(
 const generateTool = {
   name: "generate_fuel_bills",
   description:
-    "Generate and download fuel bill PDFs from freeforonline.com. PDFs save to ~/generated_bills by default. Bill time must be 8PM-10AM. Receipt number and TXN NO must differ.",
+    "Generate and download fuel bill PDFs from freeforonline.com. Omit receiptNumber and txnNo to auto-generate realistic terminal-style values. Never pass TXN/RCPT prefixed placeholder IDs.",
   inputSchema: {
     type: "object",
     properties: {
@@ -63,11 +63,11 @@ const generateTool = {
       },
       txnNo: {
         type: "string",
-        description: "Default TXN number when enableTxnNo is true (auto-generated if omitted)",
+        description: "Optional override only for a realistic 10-12 alphanumeric value. Omit to auto-generate.",
       },
       receiptNumber: {
         type: "string",
-        description: "Optional receipt number override (10-12 alphanumeric)",
+        description: "Optional override only for a realistic 10-12 alphanumeric value. Omit to auto-generate.",
       },
       outputFolder: {
         type: "string",
@@ -128,10 +128,13 @@ const generateTool = {
             stationName: { type: "string" },
             address: { type: "string" },
             enableTxnNo: { type: "boolean" },
-            txnNo: { type: "string" },
+            txnNo: {
+              type: "string",
+              description: "Optional realistic 10-12 alphanumeric TXN. Omit to auto-generate.",
+            },
             receiptNumber: {
               type: "string",
-              description: "Receipt number (10-12 alphanumeric, must differ from TXN NO)",
+              description: "Optional realistic 10-12 alphanumeric receipt number. Omit to auto-generate.",
             },
           },
           required: ["date", "company"],

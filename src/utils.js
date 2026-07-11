@@ -77,6 +77,39 @@ function isValidReceiptNumber(value) {
   return RECEIPT_NUMBER_PATTERN.test(String(value));
 }
 
+function isPlaceholderId(value) {
+  const normalized = String(value).trim();
+  return (
+    /^(TXN|RCPT)/i.test(normalized) ||
+    /20[0-9]{4}[01][0-9][0-3][0-9]/i.test(normalized)
+  );
+}
+
+function sanitizeProvidedId(value, label) {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+
+  const normalized = String(value).trim();
+  if (isPlaceholderId(normalized)) {
+    return undefined;
+  }
+
+  if (label === "receipt" && !isValidReceiptNumber(normalized)) {
+    throw new Error(
+      `Receipt number must be 10-12 alphanumeric characters. Got: ${normalized}`,
+    );
+  }
+
+  if (label === "txn" && !/^[A-Za-z0-9]{10,12}$/.test(normalized)) {
+    throw new Error(
+      `TXN NO must be 10-12 alphanumeric characters. Got: ${normalized}`,
+    );
+  }
+
+  return normalized;
+}
+
 function hashSeed(input) {
   let hash = 2166136261;
   for (let i = 0; i < input.length; i += 1) {
@@ -170,16 +203,11 @@ function resolveReceiptAndTxn(entry, config, index, billDate) {
   const useTxnNo = entry.enableTxnNo ?? config.enableTxnNo ?? true;
   const company = entry.company || "";
   const txnNo =
-    entry.txnNo ??
-    config.txnNo ??
+    sanitizeProvidedId(entry.txnNo ?? config.txnNo, "txn") ??
     generateRealisticTxnNumber(billDate, index, company);
 
-  const providedReceipt = entry.receiptNumber ?? config.receiptNumber;
-  if (providedReceipt && !isValidReceiptNumber(providedReceipt)) {
-    throw new Error(
-      `Receipt number must be 10-12 alphanumeric characters. Got: ${providedReceipt}`,
-    );
-  }
+  const providedReceipt =
+    sanitizeProvidedId(entry.receiptNumber ?? config.receiptNumber, "receipt");
 
   let receiptNumber =
     providedReceipt ?? generateRealisticReceiptNumber(billDate, index, company);
@@ -233,6 +261,8 @@ module.exports = {
   parseTime,
   isValidBillTime,
   isValidReceiptNumber,
+  isPlaceholderId,
+  sanitizeProvidedId,
   generateReceiptNumber,
   generateRealisticReceiptNumber,
   generateRealisticTxnNumber,

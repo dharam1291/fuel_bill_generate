@@ -5,8 +5,7 @@ Copy any prompt below into Cursor (with the `fuel-bill-generate` MCP server atta
 ## Constraints enforced by the generator
 
 - Bill time must be between **8PM and 10AM** (`20:00`–`10:00`)
-- **Receipt number** must be **10–12 alphanumeric** characters
-- **Receipt number** and **TXN NO** must never be the same
+- **Receipt number** and **TXN NO** are auto-generated realistic values — do **not** pass `RCPT…` or `TXN…` placeholders
 - PDFs save to **`~/generated_bills/`** by default
 - Default template is **1**
 

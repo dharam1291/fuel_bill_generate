@@ -13,6 +13,7 @@ const {
   log,
 } = require("./utils");
 const { getBrowserLaunchOptions, waitForForm } = require("./browser");
+const { fillAndSyncField, syncBillIdsInPreview } = require("./preview");
 
 const FUEL_BILL_URL = "https://freeforonline.com/fuel-bills/index.html";
 
@@ -128,13 +129,15 @@ async function fillBill(page, config, entry, index, outputDir) {
   }
 
   log(label, `Receipt ${resolvedReceipt}, TXN ${useTxnNo ? resolvedTxnNo : "disabled"}`);
-  await page.fill("#fs-receipt-number", resolvedReceipt);
+  await fillAndSyncField(page, "#fs-receipt-number", resolvedReceipt);
 
   if (useTxnNo) {
     log(label, `Enabling TXN NO: ${resolvedTxnNo}`);
     await page.locator('label[for="vat-tax"]').click();
-    await page.fill("#vat-number", resolvedTxnNo);
+    await fillAndSyncField(page, "#vat-number", resolvedTxnNo);
   }
+
+  await syncBillIdsInPreview(page, resolvedReceipt, resolvedTxnNo, useTxnNo);
 
   await page.waitForTimeout(500);
 
