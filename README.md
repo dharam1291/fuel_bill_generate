@@ -22,7 +22,8 @@ Automates [freeforonline.com/fuel-bills](https://freeforonline.com/fuel-bills/in
 | Bill time | Must be between **8PM and 10AM** (`20:00`–`10:00`) |
 | Receipt vs TXN | Receipt number and TXN NO must **never** be the same |
 | Receipt format | **10–12 alphanumeric** characters (`A–Z`, `a–z`, `0–9`) |
-| Template | Default template **1** |
+| Template | Default template **1** (explicitly selected) |
+| TEL NO | Auto-generated fake phone number on site — **removed by default** |
 
 ## Quick start
 
@@ -168,6 +169,8 @@ const result = await generateFuelBills({
 | Form fields missing | Site lazy-loads JS; the script triggers this automatically |
 | Station name wrong | Logo selection overwrites name; script fills station after logo click |
 | Empty PDF | Retry is built in; check network access to freeforonline.com |
+| Wrong template showing | Site defaults to template 2 visually; script now always clicks template 1 |
+| TEL NO on bill | Random pump phone number from the site; cleared by default (`clearTelNo: true`) |
 
 ## License
 

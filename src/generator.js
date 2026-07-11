@@ -74,6 +74,8 @@ async function fillBill(page, config, entry, index, outputDir) {
     paymentType = "Cash",
     template = "1",
     enableTxnNo = true,
+    clearTelNo = true,
+    telNo,
   } = config;
 
   const station = resolveStation(config, entry);
@@ -92,9 +94,9 @@ async function fillBill(page, config, entry, index, outputDir) {
   log(label, "Waiting for form controls");
   await waitForForm(page);
 
-  if (template !== "1") {
-    await page.locator(`label[for="template-${template}"]`).click();
-  }
+  log(label, `Selecting template ${template}`);
+  await page.locator(`label[for="template-${template}"]`).click();
+  await page.waitForTimeout(300);
 
   log(label, `Selecting company: ${entry.company}`);
   await page.locator(`label[for="${COMPANY_SELECTORS[entry.company].slice(1)}"]`).click();
@@ -135,6 +137,29 @@ async function fillBill(page, config, entry, index, outputDir) {
   }
 
   await page.waitForTimeout(500);
+
+  const resolvedTelNo = entry.telNo ?? telNo;
+  const shouldClearTel = entry.clearTelNo ?? clearTelNo;
+  await page.evaluate(({ tel, clearTel }) => {
+    document.querySelectorAll(".tele-number").forEach((el) => {
+      el.textContent = clearTel ? "" : tel || el.textContent;
+    });
+    if (clearTel && !tel) {
+      document.querySelectorAll("p").forEach((p) => {
+        if (/^TEL NO:/i.test(p.textContent.trim())) {
+          p.style.display = "none";
+        }
+      });
+    }
+  }, { tel: resolvedTelNo || "", clearTel: shouldClearTel && !resolvedTelNo });
+
+  if (shouldClearTel && !resolvedTelNo) {
+    log(label, "Removed auto-generated TEL NO from bill preview");
+  } else if (resolvedTelNo) {
+    log(label, `Set TEL NO: ${resolvedTelNo}`);
+  }
+
+  await page.waitForTimeout(300);
 
   log(label, "Downloading PDF");
   let download;

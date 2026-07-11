@@ -76,7 +76,15 @@ const generateTool = {
       template: {
         type: "string",
         enum: ["1", "2", "3"],
-        description: "Bill template style (default 1)",
+        description: "Bill template style (default 1, always explicitly selected)",
+      },
+      clearTelNo: {
+        type: "boolean",
+        description: "Remove auto-generated TEL NO from bill (default true)",
+      },
+      telNo: {
+        type: "string",
+        description: "Optional petrol pump telephone number to show instead of clearing TEL NO",
       },
       stations: {
         type: "object",
