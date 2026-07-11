@@ -6,6 +6,9 @@ const {
   formatDate,
   resolveFuelValues,
   buildOutputName,
+  resolveReceiptAndTxn,
+  defaultOutputFolder,
+  isValidBillTime,
   log,
 } = require("./utils");
 const { getBrowserLaunchOptions, waitForForm } = require("./browser");
@@ -40,6 +43,16 @@ function validateConfig(config) {
     if (!entry.address && !station?.address) {
       throw new Error(`Missing station address for ${entry.company}`);
     }
+    if (entry.time && !isValidBillTime(entry.time)) {
+      throw new Error(
+        `dates[${index}].time must be between 8PM and 10AM (20:00-10:00). Got: ${entry.time}`,
+      );
+    }
+    const billDate = formatDate(config.year, config.month, entry.date);
+    const ids = resolveReceiptAndTxn(entry, config, index, billDate);
+    if (ids.receiptNumber === ids.txnNo) {
+      throw new Error(`dates[${index}]: receipt number and TXN NO must not match`);
+    }
   }
 }
 
@@ -59,15 +72,15 @@ async function fillBill(page, config, entry, index, outputDir) {
     fuelType = "Petrol",
     customerName = "",
     paymentType = "Cash",
-    template = "2",
+    template = "1",
     enableTxnNo = true,
-    txnNo,
-    receiptNumber,
   } = config;
 
   const station = resolveStation(config, entry);
   const fuel = resolveFuelValues(entry, index);
   const billDate = formatDate(year, month, entry.date);
+  const { receiptNumber: resolvedReceipt, txnNo: resolvedTxnNo, useTxnNo } =
+    resolveReceiptAndTxn(entry, config, index, billDate);
   const outputName = buildOutputName(year, month, entry.date, entry.company);
   const outputPath = path.join(outputDir, outputName);
   const total = config.dates.length;
@@ -79,7 +92,7 @@ async function fillBill(page, config, entry, index, outputDir) {
   log(label, "Waiting for form controls");
   await waitForForm(page);
 
-  if (template !== "2") {
+  if (template !== "1") {
     await page.locator(`label[for="template-${template}"]`).click();
   }
 
@@ -112,13 +125,8 @@ async function fillBill(page, config, entry, index, outputDir) {
     await page.fill("#u-name", resolvedCustomer);
   }
 
-  const resolvedReceipt = entry.receiptNumber ?? receiptNumber;
-  if (resolvedReceipt) {
-    await page.fill("#fs-receipt-number", String(resolvedReceipt));
-  }
-
-  const useTxnNo = entry.enableTxnNo ?? enableTxnNo;
-  const resolvedTxnNo = entry.txnNo ?? txnNo ?? `TXN${billDate.replace(/-/g, "")}${String(index + 1).padStart(2, "0")}`;
+  log(label, `Receipt ${resolvedReceipt}, TXN ${useTxnNo ? resolvedTxnNo : "disabled"}`);
+  await page.fill("#fs-receipt-number", resolvedReceipt);
 
   if (useTxnNo) {
     log(label, `Enabling TXN NO: ${resolvedTxnNo}`);
@@ -160,6 +168,7 @@ async function fillBill(page, config, entry, index, outputDir) {
     rate: fuel.rate,
     liters: fuel.liters,
     txnNo: useTxnNo ? resolvedTxnNo : null,
+    receiptNumber: resolvedReceipt,
     paymentType: resolvedPayment,
     vehicleNumber: resolvedVehicle,
     customerName: resolvedCustomer || null,
@@ -169,7 +178,7 @@ async function fillBill(page, config, entry, index, outputDir) {
 async function generateFuelBills(config, onProgress) {
   validateConfig(config);
 
-  const outputDir = path.resolve(config.outputFolder || "./generated_bills");
+  const outputDir = path.resolve(config.outputFolder || defaultOutputFolder());
   fs.mkdirSync(outputDir, { recursive: true });
 
   const browser = await chromium.launch(getBrowserLaunchOptions());

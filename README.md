@@ -14,6 +14,15 @@ Automates [freeforonline.com/fuel-bills](https://freeforonline.com/fuel-bills/in
 - MCP tools for AI agents (`generate_fuel_bills`, `list_generated_bills`)
 - CLI for direct runs via JSON config
 
+## Rules
+
+| Rule | Detail |
+|------|--------|
+| Output folder | `$HOME/generated_bills` (e.g. `~/generated_bills/`) |
+| Bill time | Must be between **8PM and 10AM** (`20:00`–`10:00`) |
+| Receipt vs TXN | Receipt number and TXN NO must **never** be the same |
+| Template | Default template **1** |
+
 ## Quick start
 
 ```bash
@@ -24,7 +33,7 @@ npx playwright install chromium
 npm run generate:config
 ```
 
-PDFs are saved to `./generated_bills/`.
+PDFs are saved to `~/generated_bills/`.
 
 ## CLI usage
 
@@ -47,8 +56,9 @@ cp config.example.json my-bills.json
 | `paymentType` | `Cash`, `Online`, `Debit Card` |
 | `enableTxnNo` | Show TXN NO on bill (default `true`) |
 | `txnNo` | Default transaction number |
+| `template` | Bill template `1`, `2`, or `3` (default `1`) |
 | `stations` | Default pump name/address per company |
-| `outputFolder` | Where PDFs are saved |
+| `outputFolder` | Override output path (default `~/generated_bills`) |
 
 ### Per-receipt fields (`dates[]`)
 
@@ -59,12 +69,12 @@ cp config.example.json my-bills.json
 | `amount` | no | Total fuel amount in INR |
 | `rate` | no | Price per liter |
 | `liters` | no | Quantity (derived from amount/rate if omitted) |
-| `time` | no | Bill time `HH:MM` |
+| `time` | no | Bill time `HH:MM` (8PM–10AM only) |
 | `customerName` | no | Overrides default |
 | `paymentType` | no | Overrides default |
 | `txnNo` | no | Per-receipt TXN number |
 | `enableTxnNo` | no | Override global TXN setting |
-| `receiptNumber` | no | Receipt number |
+| `receiptNumber` | no | Receipt number (must differ from TXN NO) |
 | `stationName` / `address` | no | Override station defaults |
 
 3. Run:
@@ -109,13 +119,17 @@ See `cursor-mcp.example.json` for a copy-paste template.
 
 #### `generate_fuel_bills`
 
-Generates PDFs from the same JSON shape as the CLI config. Example prompt in Cursor:
-
-> Generate April 2026 fuel bills for HP on the 3rd (₹2412.50), Indian Oil on the 14th (₹2913), and Bharat Petroleum on the 21st (₹1936). Vehicle UP32JK1292, customer Dharmendra Singh, enable TXN NO.
+Generates PDFs from the same JSON shape as the CLI config.
 
 #### `list_generated_bills`
 
-Lists PDF files in the output folder.
+Lists PDF files in `~/generated_bills/` (or a custom folder).
+
+### 4. Test prompts
+
+See the [`prompts/`](prompts/) folder for ready-to-use Cursor prompts. Example:
+
+> Generate April 2026 fuel bills for HP on the 3rd (₹2412.50), Indian Oil on the 14th (₹2913), and Bharat Petroleum on the 21st (₹1936). Vehicle UP32JK1292, customer Dharmendra Singh, enable TXN NO.
 
 ## Programmatic usage
 
@@ -127,10 +141,18 @@ const result = await generateFuelBills({
   year: 2026,
   vehicleNumber: "UP32JK1292",
   enableTxnNo: true,
-  outputFolder: "./generated_bills",
+  template: "1",
   stations: { /* ... */ },
   dates: [
-    { date: 3, company: "HP", amount: 2412.5, rate: 96.5, txnNo: "TXN2026040301" },
+    {
+      date: 3,
+      company: "HP",
+      amount: 2412.5,
+      rate: 96.5,
+      time: "08:18",
+      receiptNumber: "4037",
+      txnNo: "TXN2026040301",
+    },
   ],
 });
 ```
@@ -140,6 +162,8 @@ const result = await generateFuelBills({
 | Issue | Fix |
 |-------|-----|
 | Browser not found | Run `npx playwright install chromium` |
+| Invalid bill time | Use time between 8PM and 10AM only |
+| Receipt/TXN conflict | Ensure receipt number ≠ TXN NO |
 | Form fields missing | Site lazy-loads JS; the script triggers this automatically |
 | Station name wrong | Logo selection overwrites name; script fills station after logo click |
 | Empty PDF | Retry is built in; check network access to freeforonline.com |

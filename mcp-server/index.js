@@ -9,6 +9,7 @@ const {
   ListToolsRequestSchema,
 } = require("@modelcontextprotocol/sdk/types.js");
 const { generateFuelBills } = require("../src/generator");
+const { defaultOutputFolder } = require("../src/utils");
 const { COMPANIES, PAYMENT_TYPES, FUEL_TYPES } = require("../src/constants");
 
 const server = new Server(
@@ -26,7 +27,7 @@ const server = new Server(
 const generateTool = {
   name: "generate_fuel_bills",
   description:
-    "Generate and download fuel bill PDFs from freeforonline.com. Supports HP, Indian Oil, and Bharat Petroleum with configurable dates, amounts, TXN NO, payment type, customer name, and vehicle details.",
+    "Generate and download fuel bill PDFs from freeforonline.com. PDFs save to ~/generated_bills by default. Bill time must be 8PM-10AM. Receipt number and TXN NO must differ.",
   inputSchema: {
     type: "object",
     properties: {
@@ -70,12 +71,12 @@ const generateTool = {
       },
       outputFolder: {
         type: "string",
-        description: "Folder to save PDFs (default ./generated_bills)",
+        description: `Folder to save PDFs (default ${defaultOutputFolder()})`,
       },
       template: {
         type: "string",
         enum: ["1", "2", "3"],
-        description: "Bill template style (default 2)",
+        description: "Bill template style (default 1)",
       },
       stations: {
         type: "object",
@@ -108,7 +109,10 @@ const generateTool = {
               type: "number",
               description: "Fuel quantity in liters. Amount derived if omitted",
             },
-            time: { type: "string", description: "Bill time HH:MM" },
+            time: {
+              type: "string",
+              description: "Bill time HH:MM (must be between 8PM and 10AM)",
+            },
             customerName: { type: "string" },
             paymentType: { type: "string", enum: PAYMENT_TYPES },
             fuelType: { type: "string", enum: FUEL_TYPES },
@@ -135,7 +139,7 @@ const listTool = {
     properties: {
       outputFolder: {
         type: "string",
-        description: "Folder to inspect (default ./generated_bills)",
+        description: `Folder to inspect (default ${defaultOutputFolder()})`,
       },
     },
   },
@@ -161,7 +165,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 
   if (name === "list_generated_bills") {
-    const outputFolder = path.resolve(args.outputFolder || "./generated_bills");
+    const outputFolder = path.resolve(args.outputFolder || defaultOutputFolder());
     if (!fs.existsSync(outputFolder)) {
       return {
         content: [

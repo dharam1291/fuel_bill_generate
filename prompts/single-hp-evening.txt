@@ -1,0 +1,1 @@
+Generate one fuel bill for April 2026: HP on the 5th, amount ₹1500, rate ₹96.5, vehicle UP32JK1292, customer Rahul Sharma, payment Online, enable TXN NO. Use evening time after 8PM.
