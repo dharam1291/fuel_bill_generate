@@ -84,7 +84,7 @@ const generateTool = {
       },
       telNo: {
         type: "string",
-        description: "Optional petrol pump telephone number to show instead of clearing TEL NO",
+        description: "Optional 10-digit Indian mobile number for TEL NO (otherwise removed)",
       },
       stations: {
         type: "object",
