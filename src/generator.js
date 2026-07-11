@@ -7,6 +7,7 @@ const {
   resolveFuelValues,
   buildOutputName,
   resolveReceiptAndTxn,
+  resolveTelNo,
   defaultOutputFolder,
   isValidBillTime,
   log,
@@ -75,7 +76,6 @@ async function fillBill(page, config, entry, index, outputDir) {
     template = "1",
     enableTxnNo = true,
     clearTelNo = true,
-    telNo,
   } = config;
 
   const station = resolveStation(config, entry);
@@ -138,19 +138,20 @@ async function fillBill(page, config, entry, index, outputDir) {
 
   await page.waitForTimeout(500);
 
-  const resolvedTelNo = entry.telNo ?? telNo;
-  const shouldClearTel = entry.clearTelNo ?? clearTelNo;
+  const { telNo: resolvedTelNo, clearTelNo: shouldClearTel } = resolveTelNo(entry, config);
   await page.evaluate(({ tel, clearTel }) => {
     document.querySelectorAll(".tele-number").forEach((el) => {
-      el.textContent = clearTel ? "" : tel || el.textContent;
+      el.textContent = clearTel ? "" : tel || "";
     });
-    if (clearTel && !tel) {
-      document.querySelectorAll("p").forEach((p) => {
-        if (/^TEL NO:/i.test(p.textContent.trim())) {
-          p.style.display = "none";
+    document.querySelectorAll("p").forEach((p) => {
+      if (/^TEL NO:/i.test(p.textContent.trim())) {
+        p.style.display = clearTel && !tel ? "none" : "";
+        if (tel) {
+          const telSpan = p.querySelector(".tele-number");
+          if (telSpan) telSpan.textContent = tel;
         }
-      });
-    }
+      }
+    });
   }, { tel: resolvedTelNo || "", clearTel: shouldClearTel && !resolvedTelNo });
 
   if (shouldClearTel && !resolvedTelNo) {

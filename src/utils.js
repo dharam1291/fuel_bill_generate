@@ -126,6 +126,26 @@ function resolveReceiptAndTxn(entry, config, index, billDate) {
   };
 }
 
+function isValidIndianTelNo(value) {
+  return /^[6-9]\d{9}$/.test(String(value));
+}
+
+function resolveTelNo(entry, config) {
+  const provided = entry.telNo ?? config.telNo;
+  const shouldClear = entry.clearTelNo ?? config.clearTelNo ?? true;
+
+  if (provided) {
+    if (!isValidIndianTelNo(provided)) {
+      throw new Error(
+        `TEL NO must be a valid 10-digit Indian mobile number. Got: ${provided}`,
+      );
+    }
+    return { telNo: String(provided), clearTelNo: false };
+  }
+
+  return { telNo: null, clearTelNo: shouldClear };
+}
+
 function log(step, message) {
   console.error(`[${step}] ${message}`);
 }
@@ -142,5 +162,7 @@ module.exports = {
   resolveFuelValues,
   buildOutputName,
   resolveReceiptAndTxn,
+  isValidIndianTelNo,
+  resolveTelNo,
   log,
 };
