@@ -67,7 +67,7 @@ const generateTool = {
       },
       receiptNumber: {
         type: "string",
-        description: "Optional receipt number override",
+        description: "Optional receipt number override (10-12 alphanumeric)",
       },
       outputFolder: {
         type: "string",
@@ -121,7 +121,10 @@ const generateTool = {
             address: { type: "string" },
             enableTxnNo: { type: "boolean" },
             txnNo: { type: "string" },
-            receiptNumber: { type: "string" },
+            receiptNumber: {
+              type: "string",
+              description: "Receipt number (10-12 alphanumeric, must differ from TXN NO)",
+            },
           },
           required: ["date", "company"],
         },

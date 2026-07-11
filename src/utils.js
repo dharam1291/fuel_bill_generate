@@ -2,6 +2,7 @@ const path = require("path");
 const { MONTH_INDEX } = require("./constants");
 
 const DEFAULT_BILL_TIMES = ["08:18", "21:42", "07:05"];
+const RECEIPT_NUMBER_PATTERN = /^[A-Za-z0-9]{10,12}$/;
 
 function defaultOutputFolder() {
   return path.join(process.env.HOME || "", "generated_bills");
@@ -72,6 +73,31 @@ function buildOutputName(year, month, day, company) {
   return `${billDate}_${suffix}.pdf`;
 }
 
+function isValidReceiptNumber(value) {
+  return RECEIPT_NUMBER_PATTERN.test(String(value));
+}
+
+function generateReceiptNumber(billDate, index) {
+  const compactDate = billDate.replace(/-/g, "").slice(2);
+  const receiptNumber = `RCPT${compactDate}${String(index + 1).padStart(2, "0")}`;
+  if (!isValidReceiptNumber(receiptNumber)) {
+    throw new Error(`Failed to generate valid receipt number: ${receiptNumber}`);
+  }
+  return receiptNumber;
+}
+
+function ensureDistinctReceipt(receiptNumber, txnNo, billDate, index) {
+  let receipt = String(receiptNumber);
+  let attempt = 0;
+
+  while (receipt === String(txnNo)) {
+    attempt += 1;
+    receipt = generateReceiptNumber(billDate, index + attempt * 10);
+  }
+
+  return receipt;
+}
+
 function resolveReceiptAndTxn(entry, config, index, billDate) {
   const useTxnNo = entry.enableTxnNo ?? config.enableTxnNo ?? true;
   const txnNo =
@@ -79,21 +105,22 @@ function resolveReceiptAndTxn(entry, config, index, billDate) {
     config.txnNo ??
     `TXN${billDate.replace(/-/g, "")}${String(index + 1).padStart(2, "0")}`;
 
-  let receiptNumber =
-    entry.receiptNumber ??
-    config.receiptNumber ??
-    String(4000 + index * 137 + Number(billDate.slice(-2)));
-
-  if (String(receiptNumber) === String(txnNo)) {
-    receiptNumber = String(Number(receiptNumber) + 1);
+  const providedReceipt = entry.receiptNumber ?? config.receiptNumber;
+  if (providedReceipt && !isValidReceiptNumber(providedReceipt)) {
+    throw new Error(
+      `Receipt number must be 10-12 alphanumeric characters. Got: ${providedReceipt}`,
+    );
   }
 
-  if (String(receiptNumber) === String(txnNo)) {
+  let receiptNumber = providedReceipt ?? generateReceiptNumber(billDate, index);
+  receiptNumber = ensureDistinctReceipt(receiptNumber, txnNo, billDate, index);
+
+  if (receiptNumber === String(txnNo)) {
     throw new Error("Receipt number and TXN NO must not be the same");
   }
 
   return {
-    receiptNumber: String(receiptNumber),
+    receiptNumber,
     txnNo: String(txnNo),
     useTxnNo,
   };
@@ -109,6 +136,8 @@ module.exports = {
   formatDate,
   parseTime,
   isValidBillTime,
+  isValidReceiptNumber,
+  generateReceiptNumber,
   resolveBillTime,
   resolveFuelValues,
   buildOutputName,

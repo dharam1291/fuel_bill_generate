@@ -28,7 +28,7 @@
       "amount": 2412.5,
       "rate": 96.5,
       "time": "08:18",
-      "receiptNumber": "4037",
+      "receiptNumber": "RCPT26040301",
       "txnNo": "TXN2026040301",
       "paymentType": "Online"
     },
@@ -38,7 +38,7 @@
       "amount": 2913,
       "rate": 97.1,
       "time": "21:42",
-      "receiptNumber": "4174",
+      "receiptNumber": "RCPT26041401",
       "txnNo": "TXN2026041401",
       "paymentType": "Debit Card"
     },
@@ -48,7 +48,7 @@
       "amount": 1936,
       "rate": 96.8,
       "time": "07:05",
-      "receiptNumber": "4321",
+      "receiptNumber": "RCPT26042101",
       "txnNo": "TXN2026042101",
       "paymentType": "Cash"
     }
