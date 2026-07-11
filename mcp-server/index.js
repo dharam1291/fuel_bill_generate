@@ -63,7 +63,7 @@ const generateTool = {
       },
       txnNo: {
         type: "string",
-        description: "Default TXN number when enableTxnNo is true",
+        description: "Default TXN number when enableTxnNo is true (auto-generated if omitted)",
       },
       receiptNumber: {
         type: "string",

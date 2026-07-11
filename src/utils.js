@@ -77,22 +77,90 @@ function isValidReceiptNumber(value) {
   return RECEIPT_NUMBER_PATTERN.test(String(value));
 }
 
-function generateReceiptNumber(billDate, index) {
-  const compactDate = billDate.replace(/-/g, "").slice(2);
-  const receiptNumber = `RCPT${compactDate}${String(index + 1).padStart(2, "0")}`;
+function hashSeed(input) {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function createRng(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state;
+  };
+}
+
+function randomDigit(rng, allowZero = true) {
+  const digit = rng() % 10;
+  if (!allowZero && digit === 0) {
+    return 1 + (rng() % 9);
+  }
+  return digit;
+}
+
+function generateRealisticReceiptNumber(billDate, index, company = "") {
+  const rng = createRng(hashSeed(`${billDate}:${index}:${company}:receipt`));
+  const length = 10 + (rng() % 3);
+  let receiptNumber = "";
+
+  for (let i = 0; i < length; i += 1) {
+    if (i === 0) {
+      receiptNumber += String(1 + (rng() % 9));
+      continue;
+    }
+
+    if (length >= 11 && i === length - 2 && rng() % 5 === 0) {
+      receiptNumber += String.fromCharCode(65 + (rng() % 26));
+      continue;
+    }
+
+    receiptNumber += String(randomDigit(rng));
+  }
+
   if (!isValidReceiptNumber(receiptNumber)) {
     throw new Error(`Failed to generate valid receipt number: ${receiptNumber}`);
   }
+
   return receiptNumber;
 }
 
-function ensureDistinctReceipt(receiptNumber, txnNo, billDate, index) {
+function generateRealisticTxnNumber(billDate, index, company = "") {
+  const rng = createRng(hashSeed(`${billDate}:${index}:${company}:txn`));
+  const length = 10 + (rng() % 3);
+  let txnNo = "";
+
+  for (let i = 0; i < length; i += 1) {
+    if (i === 0) {
+      txnNo += String(2 + (rng() % 8));
+      continue;
+    }
+
+    if (length === 12 && i === 4 && rng() % 4 === 0) {
+      txnNo += String.fromCharCode(65 + (rng() % 26));
+      continue;
+    }
+
+    txnNo += String(randomDigit(rng));
+  }
+
+  return txnNo;
+}
+
+function generateReceiptNumber(billDate, index, company = "") {
+  return generateRealisticReceiptNumber(billDate, index, company);
+}
+
+function ensureDistinctReceipt(receiptNumber, txnNo, billDate, index, company = "") {
   let receipt = String(receiptNumber);
   let attempt = 0;
 
   while (receipt === String(txnNo)) {
     attempt += 1;
-    receipt = generateReceiptNumber(billDate, index + attempt * 10);
+    receipt = generateRealisticReceiptNumber(billDate, index + attempt * 17, company);
   }
 
   return receipt;
@@ -100,10 +168,11 @@ function ensureDistinctReceipt(receiptNumber, txnNo, billDate, index) {
 
 function resolveReceiptAndTxn(entry, config, index, billDate) {
   const useTxnNo = entry.enableTxnNo ?? config.enableTxnNo ?? true;
+  const company = entry.company || "";
   const txnNo =
     entry.txnNo ??
     config.txnNo ??
-    `TXN${billDate.replace(/-/g, "")}${String(index + 1).padStart(2, "0")}`;
+    generateRealisticTxnNumber(billDate, index, company);
 
   const providedReceipt = entry.receiptNumber ?? config.receiptNumber;
   if (providedReceipt && !isValidReceiptNumber(providedReceipt)) {
@@ -112,8 +181,15 @@ function resolveReceiptAndTxn(entry, config, index, billDate) {
     );
   }
 
-  let receiptNumber = providedReceipt ?? generateReceiptNumber(billDate, index);
-  receiptNumber = ensureDistinctReceipt(receiptNumber, txnNo, billDate, index);
+  let receiptNumber =
+    providedReceipt ?? generateRealisticReceiptNumber(billDate, index, company);
+  receiptNumber = ensureDistinctReceipt(
+    receiptNumber,
+    txnNo,
+    billDate,
+    index,
+    company,
+  );
 
   if (receiptNumber === String(txnNo)) {
     throw new Error("Receipt number and TXN NO must not be the same");
@@ -158,6 +234,8 @@ module.exports = {
   isValidBillTime,
   isValidReceiptNumber,
   generateReceiptNumber,
+  generateRealisticReceiptNumber,
+  generateRealisticTxnNumber,
   resolveBillTime,
   resolveFuelValues,
   buildOutputName,

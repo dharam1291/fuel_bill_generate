@@ -21,7 +21,8 @@ Automates [freeforonline.com/fuel-bills](https://freeforonline.com/fuel-bills/in
 | Output folder | `$HOME/generated_bills` (e.g. `~/generated_bills/`) |
 | Bill time | Must be between **8PM and 10AM** (`20:00`–`10:00`) |
 | Receipt vs TXN | Receipt number and TXN NO must **never** be the same |
-| Receipt format | **10–12 alphanumeric** characters (`A–Z`, `a–z`, `0–9`) |
+| Receipt format | **10–12 alphanumeric** characters, auto-generated to look like terminal receipt numbers |
+| TXN format | **10–12 alphanumeric** characters, auto-generated to look like payment terminal references |
 | Template | Default template **1** (explicitly selected) |
 | TEL NO | Site auto-generates a random number — **removed by default**. Optional: pass a valid **10-digit Indian** mobile number |
 
@@ -152,8 +153,6 @@ const result = await generateFuelBills({
       amount: 2412.5,
       rate: 96.5,
       time: "08:18",
-      receiptNumber: "RCPT26040301",
-      txnNo: "TXN2026040301",
     },
   ],
 });
@@ -165,7 +164,7 @@ const result = await generateFuelBills({
 |-------|-----|
 | Browser not found | Run `npx playwright install chromium` |
 | Invalid bill time | Use time between 8PM and 10AM only |
-| Invalid receipt number | Use 10–12 letters/numbers only, e.g. `RCPT26040301` |
+| Invalid receipt number | Use 10–12 letters/numbers only, e.g. `8472916350` |
 | Form fields missing | Site lazy-loads JS; the script triggers this automatically |
 | Station name wrong | Logo selection overwrites name; script fills station after logo click |
 | Empty PDF | Retry is built in; check network access to freeforonline.com |

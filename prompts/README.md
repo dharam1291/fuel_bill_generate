@@ -27,7 +27,7 @@ Generate one fuel bill for April 2026: HP on the 5th, amount ₹1500, rate ₹96
 ## Bharat Petroleum with custom TXN
 
 ```
-Create a Bharat Petroleum petrol bill for 12 April 2026. Amount ₹2200, vehicle UP32JK1292, customer Dharmendra Singh, TXN NO TXN2026041209, receipt number RCPT26041201, time 09:30 AM, payment Cash.
+Create a Bharat Petroleum petrol bill for 12 April 2026. Amount ₹2200, vehicle UP32JK1292, customer Dharmendra Singh, time 09:30 AM, payment Cash. Use realistic auto-generated receipt and TXN numbers.
 ```
 
 ## Indian Oil early morning
